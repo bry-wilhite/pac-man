@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Pac-Man</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Pac-Man properties
+        let pacman = {
+            x: 200,
+            y: 200,
+            radius: 20,
+            speed: 4,
+            mouthAngle: 0,
+            direction: 0
+        };
+        
+        // Dot properties
+        let dots = [];
+        for (let i = 0; i < 10; i++) {
+            dots.push({
+                x: Math.random() * 380 + 10,
+                y: Math.random() * 380 + 10,
+                radius: 5
+            });
+        }
+        
+        let score = 0;
+        
+        // Handle keyboard controls
+        let keys = {};
+        document.addEventListener('keydown', (e) => keys[e.key] = true);
+        document.addEventListener('keyup', (e) => keys[e.key] = false);
+        
+        function update() {
+            // Move Pac-Man
+            if (keys['ArrowUp']) pacman.y -= pacman.speed;
+            if (keys['ArrowDown']) pacman.y += pacman.speed;
+            if (keys['ArrowLeft']) pacman.x -= pacman.speed;
+            if (keys['ArrowRight']) pacman.x += pacman.speed;
+            
+            // Keep Pac-Man in bounds
+            pacman.x = Math.max(pacman.radius, Math.min(canvas.width - pacman.radius, pacman.x));
+            pacman.y = Math.max(pacman.radius, Math.min(canvas.height - pacman.radius, pacman.y));
+            
+            // Animate mouth
+            pacman.mouthAngle += 0.2;
+        }
+        
+        function checkCollisions() {
+            dots = dots.filter(dot => {
+                let dx = pacman.x - dot.x;
+                let dy = pacman.y - dot.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < pacman.radius + dot.radius) {
+                    score += 10;
+                    return false; // Remove dot
+                }
+                return true; // Keep dot
+            });
+            
+            // Add new dot when one is eaten
+            if (dots.length < 10) {
+                dots.push({
+                    x: Math.random() * 380 + 10,
+                    y: Math.random() * 380 + 10,
+                    radius: 5
+                });
+            }
+        }
+        
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw dots
+            ctx.fillStyle = 'white';
+            dots.forEach(dot => {
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Draw Pac-Man
+            ctx.fillStyle = 'yellow';
+            ctx.beginPath();
+            let mouthOpen = Math.abs(Math.sin(pacman.mouthAngle)) * Math.PI / 4;
+            ctx.arc(pacman.x, pacman.y, pacman.radius, mouthOpen, 2 * Math.PI - mouthOpen);
+            ctx.lineTo(pacman.x, pacman.y);
+            ctx.fill();
+            
+            // Draw score
+            ctx.fillStyle = 'white';
+            ctx.font = '20px Arial';
+            ctx.fillText('Score: ' + score, 10, 30);
+        }
+        
+        function gameLoop() {
+            update();
+            checkCollisions();
+            draw();
+            requestAnimationFrame(gameLoop);​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
